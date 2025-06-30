@@ -8,8 +8,8 @@ load_dotenv()
 
 class Snippet(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    name: str
-    price: float
+    title: str
+    code: str
 
 
 if __name__ == "__main__":
