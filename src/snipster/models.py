@@ -10,10 +10,13 @@ class Snippet(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     title: str
     code: str
+    description: str
+    created: str
+    creator: str
 
 
 if __name__ == "__main__":
-    DB_HOST = os.environ["DB_HOST"]
-    engine = create_engine(f"sqlite:///{DB_HOST}")
+    DATABASE_URL = os.environ["DATABASE_URL"]
+    engine = create_engine(f"sqlite:///{DATABASE_URL}")
     SQLModel.metadata.create_all(engine)
     print("Database + table created!")
