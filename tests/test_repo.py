@@ -1,31 +1,40 @@
 import pytest
-from sqlmodel import Session, SQLModel, create_engine
 
 from snipster.models import Snippet
-
-engine = create_engine("sqlite:///:memory:", echo=True)
-
-
-@pytest.fixture(scope="module", autouse=True)
-def setup_database():
-    SQLModel.metadata.create_all(engine)
+from snipster.repo import InMemorySnippetRepo
 
 
-def test_create_snippet():
+@pytest.fixture(scope="function")
+def repo():
+    return InMemorySnippetRepo()
+
+
+@pytest.fixture(scope="function")
+def add_snippet_1(repo):
     snippet = Snippet(
         title="Test Snippet",
-        code="print('Hello, World!')",
-        description="Test Snippet Description",
-        created="Jul-06-2025",
-        creator="Karthik G",
+        code="print('Hello, Test!')",
+        description="An example snippet for testing.",
+        created="Jul-21-2025",
+        creator="Test User",
     )
-    with Session(engine) as session:
-        session.add(snippet)
-        session.commit()
-        session.refresh(snippet)
-        assert snippet.id is not None
-        assert snippet.title == "Test Snippet"
-        assert snippet.code == "print('Hello, World!')"
-        assert snippet.description == "Test Snippet Description"
-        assert snippet.created == "Jul-06-2025"
-        assert snippet.creator == "Karthik G"
+    repo.add_snippet(snippet)
+    return snippet
+
+
+def test_add_snippet(repo, add_snippet_1):
+    assert repo._data[1] == add_snippet_1
+
+
+def test_list_snippets(add_snippet_1, repo):
+    assert repo._data[1] == add_snippet_1
+    assert len(repo.list_snippets()) == 1
+
+
+def test_get_snippet(add_snippet_1, repo):
+    assert repo.get_snippet(1) == add_snippet_1
+
+
+def test_delete_snippet(add_snippet_1, repo):
+    repo.delete_snippet(1)
+    assert repo._data.get(1) is None

@@ -63,3 +63,5 @@ uv run pytest
 uv run python -m src.snipster.models
 uv run poe cov
 uv tool install poethepoet
+
+uv run pytest -k repo

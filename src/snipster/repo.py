@@ -8,6 +8,8 @@ from .models import Snippet
 
 load_dotenv()
 
+DATABASE_URL = os.environ["DATABASE_URL"]
+
 
 class SnipsterRepo(ABC):
     @abstractmethod
@@ -30,16 +32,32 @@ class SnipsterRepo(ABC):
 # InMemorySnippetRepo is a placeholder for a repository that handles in-memory storage of snippets.
 # it  implements methods to add, delete, list, and get snippets from memory.
 class InMemorySnippetRepo(SnipsterRepo):
-    pass
+    def __init__(self) -> None:
+        self._data: dict[int, Snippet] = {}
+
+    def add_snippet(self, snippet: Snippet) -> None:
+        next_id = max(self._data.keys(), default=0) + 1
+        self._data[next_id] = snippet
+
+    def list_snippets(self) -> list[Snippet]:
+        return list(self._data.values())
+
+    def get_snippet(self, snippet_id: int) -> Snippet | None:
+        return self._data.get(snippet_id)
+
+    def delete_snippet(self, snippet_id: int) -> None:
+        self._data.pop(snippet_id, None)
 
 
-# DatabaseSnippetRepo is a placeholder for a repository that handles database storage of snippets.
-# It  implements methods to add, delete, list, and get snippets from a database.
+#     def add_snippet(self, Snippet):
+#         return super().add_snippet(snippet)
 
 
 class DatabaseSnippetRepo(SnipsterRepo):
-    DATABASE_URL = os.environ["DATABASE_URL"]
-    engine = create_engine(f"sqlite:///{DATABASE_URL}", echo=True)
+    def __init__(self, database_url: str | None):
+        self.engine = create_engine(os.environ["DATABASE_URL"])
+
+    #    DbClass(url...
 
     def add_snippet(self, Snippet):
         # new_snippet = Snippet(title="Test Snippet",
@@ -62,9 +80,10 @@ class DatabaseSnippetRepo(SnipsterRepo):
         with Session(self.engine) as session:
             statement = select(Snippet).where(Snippet.id == id)
             results = session.exec(statement)
-            return results.first()
-            # for snippet in results:
-            # print(snippet)
+            if results:
+                return results.first()
+            else:
+                print("Snippet not found.")
 
     def delete_snippet(self, id: int) -> None:
         with Session(self.engine) as session:
@@ -85,39 +104,39 @@ class JSONSnippetRepo(SnipsterRepo):
     pass
 
 
-def main() -> None:
-    repo = DatabaseSnippetRepo()
-    repo.add_snippet(
-        Snippet(
-            title="Test Snippet",
-            code="print('Hello, USA!')",
-            description="Test Snippet Description",
-            created="Jul-06-2025",
-            creator="Karthik G",
-        )
-    )
-    print("Snippet added successfully!")
+# def main() -> None:
+#     repo = DatabaseSnippetRepo()
+#     repo.add_snippet(
+#         Snippet(
+#             title="Test Snippet",
+#             code="print('Hello, USA!')",
+#             description="Test Snippet Description",
+#             created="Jul-06-2025",
+#             creator="Karthik G",
+#         )
+#     )
+#     print("Snippet added successfully!")
 
-    snippets = repo.list_snippets()
-    if snippets:
-        print("List of Snippets:")
-        for snippet in snippets:
-            print(
-                f"Title: {snippet.title}, Code: {snippet.code}, Description: {snippet.description}, Created: {snippet.created}, Creator: {snippet.creator}"
-            )
-    else:
-        print("No snippets found.")
+#     snippets = repo.list_snippets()
+#     if snippets:
+#         print("List of Snippets:")
+#         for snippet in snippets:
+#             print(
+#                 f"Title: {snippet.title}, Code: {snippet.code}, Description: {snippet.description}, Created: {snippet.created}, Creator: {snippet.creator}"
+#             )
+#     else:
+#         print("No snippets found.")
 
-    get_snippet = repo.get_snippet(1)
-    if get_snippet:
-        print(
-            f"Snippet Found: {get_snippet.title}, Code: {get_snippet.code}, Description: {get_snippet.description}, Created: {get_snippet.created}, Creator: {get_snippet.creator}"
-        )
-    else:
-        print("Snippet not found.")
+#     get_snippet = repo.get_snippet(1)
+#     if get_snippet:
+#         print(
+#             f"Snippet Found: {get_snippet.title}, Code: {get_snippet.code}, Description: {get_snippet.description}, Created: {get_snippet.created}, Creator: {get_snippet.creator}"
+#         )
+#     else:
+#         print("Snippet not found.")
 
-    repo.delete_snippet(1)
+#     repo.delete_snippet(1)
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
